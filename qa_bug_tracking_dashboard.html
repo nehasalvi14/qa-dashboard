@@ -1,0 +1,1730 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-[#080B12] text-[#F1F5F9]">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QA & Bug Tracking Dashboard</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Google Fonts Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            bgDark: '#080B12',
+            sidebarDark: '#0D1422',
+            cardDark: '#111827',
+            cardBorder: '#1F2937',
+            primaryBlue: '#2563EB',
+            highlightBlue: '#38BDF8',
+            softWhite: '#F1F5F9',
+            slateText: '#94A3B8',
+            statusSuccess: '#22C55E',
+            statusWarning: '#F59E0B',
+            statusError: '#EF4444',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #080B12;
+      color: #F1F5F9;
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #080B12;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1F2937;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #374151;
+    }
+    .modal-backdrop {
+      background-color: rgba(8, 11, 18, 0.85);
+      backdrop-filter: blur(4px);
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col font-sans antialiased overflow-x-hidden">
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- AUTH SECTION (Login / Register) -->
+  <div id="authSection" class="min-h-screen flex items-center justify-center p-4 bg-[#080B12] relative overflow-hidden">
+    <!-- Subtle Background Glows -->
+    <div class="absolute -top-32 -left-32 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="w-full max-w-md bg-[#111827] border border-[#1F2937] rounded-2xl shadow-2xl p-8 relative z-10">
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-14 h-14 bg-blue-600/20 text-[#38BDF8] rounded-xl mb-3 border border-blue-500/30">
+          <i class="fa-solid font-bold fa-bug-slash text-2xl"></i>
+        </div>
+        <h1 class="text-2xl font-bold text-white tracking-tight">QA Core Portal</h1>
+        <p class="text-sm text-[#94A3B8] mt-1">Enterprise Bug & Test Management System</p>
+      </div>
+
+      <!-- Tab Switcher -->
+      <div class="flex bg-[#0D1422] p-1 rounded-xl mb-6 border border-[#1F2937]">
+        <button id="loginTabBtn" onclick="switchAuthTab('login')" class="flex-1 py-2 text-sm font-medium rounded-lg bg-[#2563EB] text-white transition-all shadow">Login</button>
+        <button id="registerTabBtn" onclick="switchAuthTab('register')" class="flex-1 py-2 text-sm font-medium rounded-lg text-[#94A3B8] hover:text-white transition-all">Register</button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-[#94A3B8] uppercase tracking-wider mb-1">Email Address</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-[#94A3B8]"><i class="fa-solid fa-envelope"></i></span>
+            <input type="email" id="loginEmail" required value="test@qa.com" class="w-full pl-10 pr-4 py-2.5 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-[#2563EB] text-sm">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-[#94A3B8] uppercase tracking-wider mb-1">Password</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-[#94A3B8]"><i class="fa-solid fa-lock"></i></span>
+            <input type="password" id="loginPassword" required value="password" class="w-full pl-10 pr-10 py-2.5 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-[#2563EB] text-sm">
+            <button type="button" onclick="togglePasswordVisibility('loginPassword', this)" class="absolute inset-y-0 right-0 pr-3 flex items-center text-[#94A3B8] hover:text-white">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs">
+          <label class="flex items-center text-[#94A3B8] cursor-pointer">
+            <input type="checkbox" checked class="rounded bg-[#0D1422] border-[#1F2937] text-[#2563EB] focus:ring-0 mr-2">
+            Remember me
+          </label>
+          <button type="button" onclick="openModal('forgotPasswordModal')" class="text-[#38BDF8] hover:underline">Forgot password?</button>
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-[#2563EB] hover:bg-blue-600 text-white font-semibold rounded-xl transition-all shadow-lg shadow-blue-600/20 text-sm">
+          Sign In to Portal
+        </button>
+        
+        <div class="mt-4 p-3 bg-blue-900/20 border border-blue-500/20 rounded-xl text-xs text-[#94A3B8]">
+          <span class="font-semibold text-[#38BDF8]">Demo Account:</span> test@qa.com / password
+        </div>
+      </form>
+
+      <!-- Register Form -->
+      <form id="registerForm" onsubmit="handleRegister(event)" class="space-y-4 hidden">
+        <div>
+          <label class="block text-xs font-semibold text-[#94A3B8] uppercase tracking-wider mb-1">Full Name</label>
+          <input type="text" id="regName" required placeholder="Alex Turner" class="w-full px-4 py-2.5 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-[#2563EB] text-sm">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-[#94A3B8] uppercase tracking-wider mb-1">Email Address</label>
+          <input type="email" id="regEmail" required placeholder="alex@qa.com" class="w-full px-4 py-2.5 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-[#2563EB] text-sm">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-[#94A3B8] uppercase tracking-wider mb-1">Role</label>
+          <select id="regRole" required class="w-full px-4 py-2.5 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white focus:outline-none focus:border-[#2563EB] text-sm">
+            <option value="QA Tester">QA Tester</option>
+            <option value="Developer">Developer</option>
+            <option value="QA Head">QA Head</option>
+            <option value="Client">Client</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-[#94A3B8] uppercase tracking-wider mb-1">Password</label>
+          <div class="relative">
+            <input type="password" id="regPassword" required placeholder="••••••••" class="w-full px-4 pr-10 py-2.5 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-[#2563EB] text-sm">
+            <button type="button" onclick="togglePasswordVisibility('regPassword', this)" class="absolute inset-y-0 right-0 pr-3 flex items-center text-[#94A3B8] hover:text-white">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-[#2563EB] hover:bg-blue-600 text-white font-semibold rounded-xl transition-all shadow-lg shadow-blue-600/20 text-sm">
+          Create Account
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MAIN APP CONTAINER -->
+  <div id="mainApp" class="hidden flex-1 flex flex-col md:flex-row h-screen overflow-hidden">
+    <!-- SIDEBAR -->
+    <aside class="w-full md:w-64 bg-[#0D1422] border-r border-[#1F2937] flex flex-col flex-shrink-0">
+      <!-- Logo Header -->
+      <div class="p-5 border-b border-[#1F2937] flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-9 h-9 bg-[#2563EB] rounded-lg flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+            <i class="fa-solid fa-bug text-lg"></i>
+          </div>
+          <div>
+            <h2 class="font-bold text-white leading-none text-base">QA Nexus</h2>
+            <span class="text-[10px] text-[#38BDF8] font-medium tracking-wider uppercase">Quality Hub</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="p-3 space-y-1 flex-1 overflow-y-auto">
+        <button onclick="navigateTo('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all bg-[#2563EB] text-white">
+          <i class="fa-solid fa-chart-pie w-5 text-center"></i>
+          <span>Dashboard</span>
+        </button>
+
+        <button onclick="navigateTo('projects')" id="nav-projects" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#94A3B8] hover:bg-[#111827] hover:text-white transition-all">
+          <i class="fa-solid fa-folder-tree w-5 text-center"></i>
+          <span>Projects</span>
+        </button>
+
+        <button onclick="navigateTo('bugs')" id="nav-bugs" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#94A3B8] hover:bg-[#111827] hover:text-white transition-all">
+          <i class="fa-solid fa-bug w-5 text-center"></i>
+          <span>Bug Management</span>
+        </button>
+
+        <button onclick="navigateTo('testcases')" id="nav-testcases" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#94A3B8] hover:bg-[#111827] hover:text-white transition-all">
+          <i class="fa-solid fa-[#38BDF8] fa-vial-circle-check w-5 text-center"></i>
+          <span>Test Cases</span>
+        </button>
+
+        <button onclick="navigateTo('team')" id="nav-team" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#94A3B8] hover:bg-[#111827] hover:text-white transition-all">
+          <i class="fa-solid fa-users w-5 text-center"></i>
+          <span>Team Hierarchy</span>
+        </button>
+
+        <button onclick="navigateTo('reports')" id="nav-reports" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#94A3B8] hover:bg-[#111827] hover:text-white transition-all">
+          <i class="fa-solid fa-chart-line w-5 text-center"></i>
+          <span>Reports & Quality Metrics</span>
+        </button>
+      </nav>
+
+      <!-- User Profile & Logout -->
+      <div class="p-4 border-t border-[#1F2937] bg-[#0A0E18]">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-3 truncate">
+            <div id="userAvatar" class="w-9 h-9 rounded-full bg-blue-600/30 text-[#38BDF8] font-bold border border-blue-500/30 flex items-center justify-center text-sm">
+              QA
+            </div>
+            <div class="truncate">
+              <p id="userNameDisplay" class="text-xs font-semibold text-white truncate">QA Tester</p>
+              <p id="userRoleDisplay" class="text-[10px] text-[#94A3B8] truncate">Tester</p>
+            </div>
+          </div>
+          <button onclick="handleLogout()" title="Logout" class="p-2 text-[#94A3B8] hover:text-[#EF4444] transition-colors rounded-lg">
+            <i class="fa-solid fa-right-from-bracket"></i>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- CONTENT AREA -->
+    <main class="flex-1 overflow-y-auto bg-[#080B12] p-4 md:p-8 flex flex-col">
+      <!-- HEADER -->
+      <header class="flex flex-col md:flex-row md:items-center justify-between mb-8 pb-4 border-b border-[#1F2937] gap-4">
+        <div>
+          <h1 id="pageTitle" class="text-2xl font-bold text-white">Dashboard Overview</h1>
+          <p id="pageSubtitle" class="text-xs text-[#94A3B8] mt-1">Real-time Software Quality Metrics & Defect Status</p>
+        </div>
+        <div class="flex items-center space-x-3">
+          <span id="systemClock" class="text-xs text-[#94A3B8] font-mono bg-[#111827] px-3 py-1.5 rounded-lg border border-[#1F2937]">00:00:00</span>
+          <button onclick="quickAddModal()" class="px-3.5 py-2 bg-[#2563EB] hover:bg-blue-600 text-white rounded-xl text-xs font-semibold transition-all flex items-center space-x-2 shadow-md shadow-blue-600/20">
+            <i class="fa-solid fa-plus"></i>
+            <span>Quick Create</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- SECTION 1: DASHBOARD -->
+      <section id="section-dashboard" class="space-y-6">
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+          <div onclick="navigateTo('projects')" class="bg-[#111827] border border-[#1F2937] p-4 rounded-xl hover:border-[#2563EB] transition-all cursor-pointer">
+            <p class="text-[11px] text-[#94A3B8] font-medium">Projects</p>
+            <h3 id="statTotalProjects" class="text-xl font-bold text-white mt-1">0</h3>
+            <span class="text-[10px] text-[#22C55E] flex items-center mt-1"><i class="fa-solid fa-arrow-up mr-1"></i> Active</span>
+          </div>
+          <div onclick="navigateTo('bugs')" class="bg-[#111827] border border-[#1F2937] p-4 rounded-xl hover:border-[#2563EB] transition-all cursor-pointer">
+            <p class="text-[11px] text-[#94A3B8] font-medium">Total Bugs</p>
+            <h3 id="statTotalBugs" class="text-xl font-bold text-white mt-1">0</h3>
+            <span class="text-[10px] text-[#38BDF8] mt-1 block">Logged</span>
+          </div>
+          <div onclick="navigateTo('bugs', 'Critical')" class="bg-[#111827] border border-[#1F2937] p-4 rounded-xl hover:border-[#EF4444] transition-all cursor-pointer">
+            <p class="text-[11px] text-[#94A3B8] font-medium">Critical Bugs</p>
+            <h3 id="statCriticalBugs" class="text-xl font-bold text-[#EF4444] mt-1">0</h3>
+            <span class="text-[10px] text-[#EF4444] mt-1 block">High Alert</span>
+          </div>
+          <div onclick="navigateTo('bugs', 'Open')" class="bg-[#111827] border border-[#1F2937] p-4 rounded-xl hover:border-[#F59E0B] transition-all cursor-pointer">
+            <p class="text-[11px] text-[#94A3B8] font-medium">Pending Bugs</p>
+            <h3 id="statPendingBugs" class="text-xl font-bold text-[#F59E0B] mt-1">0</h3>
+            <span class="text-[10px] text-[#F59E0B] mt-1 block">Open / In-Progress</span>
+          </div>
+          <div onclick="navigateTo('bugs', 'Resolved')" class="bg-[#111827] border border-[#1F2937] p-4 rounded-xl hover:border-[#22C55E] transition-all cursor-pointer">
+            <p class="text-[11px] text-[#94A3B8] font-medium">Resolved Bugs</p>
+            <h3 id="statResolvedBugs" class="text-xl font-bold text-[#22C55E] mt-1">0</h3>
+            <span class="text-[10px] text-[#22C55E] mt-1 block">Fixed / Closed</span>
+          </div>
+          <div onclick="navigateTo('testcases')" class="bg-[#111827] border border-[#1F2937] p-4 rounded-xl hover:border-[#2563EB] transition-all cursor-pointer">
+            <p class="text-[11px] text-[#94A3B8] font-medium">Test Cases</p>
+            <h3 id="statTotalTestCases" class="text-xl font-bold text-white mt-1">0</h3>
+            <span class="text-[10px] text-[#38BDF8] mt-1 block">Executed</span>
+          </div>
+          <div class="bg-[#111827] border border-[#1F2937] p-4 rounded-xl">
+            <p class="text-[11px] text-[#94A3B8] font-medium">QA Progress</p>
+            <h3 id="statQaProgress" class="text-xl font-bold text-[#38BDF8] mt-1">0%</h3>
+            <div class="w-full bg-[#0D1422] h-1.5 rounded-full mt-2 overflow-hidden">
+              <div id="statProgressBar" class="bg-[#38BDF8] h-full" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-[#111827] border border-[#1F2937] p-5 rounded-2xl">
+            <h3 class="text-sm font-semibold text-white mb-4 flex items-center">
+              <i class="fa-solid fa-chart-pie text-[#2563EB] mr-2"></i> Severity-wise Bug Summary
+            </h3>
+            <div class="h-64 relative">
+              <canvas id="bugSeverityChart"></canvas>
+            </div>
+          </div>
+
+          <div class="bg-[#111827] border border-[#1F2937] p-5 rounded-2xl">
+            <h3 class="text-sm font-semibold text-white mb-4 flex items-center">
+              <i class="fa-solid fa-chart-bar text-[#38BDF8] mr-2"></i> Open vs Resolved Defects
+            </h3>
+            <div class="h-64 relative">
+              <canvas id="bugStatusChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activity Feed -->
+        <div class="bg-[#111827] border border-[#1F2937] rounded-2xl p-5">
+          <h3 class="text-sm font-semibold text-white mb-4 flex items-center">
+            <i class="fa-solid fa-clock-rotate-left text-[#38BDF8] mr-2"></i> Recent QA Activity Logs
+          </h3>
+          <div id="recentActivityList" class="space-y-3 text-xs text-[#94A3B8]">
+            <!-- Dynamic activity content -->
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 2: PROJECTS -->
+      <section id="section-projects" class="space-y-6 hidden">
+        <div class="flex justify-between items-center">
+          <h2 class="text-lg font-bold text-white">Managed Software Projects</h2>
+          <button onclick="openModal('addProjectModal')" class="px-4 py-2 bg-[#2563EB] hover:bg-blue-600 text-white rounded-xl text-xs font-semibold transition-all flex items-center space-x-2">
+            <i class="fa-solid fa-folder-plus"></i>
+            <span>Add New Project</span>
+          </button>
+        </div>
+
+        <div id="projectsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Rendered dynamically -->
+        </div>
+      </section>
+
+      <!-- SECTION 3: BUG MANAGEMENT -->
+      <section id="section-bugs" class="space-y-6 hidden">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="flex items-center space-x-3">
+            <input type="text" id="bugSearch" oninput="filterBugs()" placeholder="Search bugs..." class="px-4 py-2 bg-[#111827] border border-[#1F2937] rounded-xl text-xs text-white focus:outline-none focus:border-[#2563EB] w-64">
+            <select id="bugFilterSeverity" onchange="filterBugs()" class="px-3 py-2 bg-[#111827] border border-[#1F2937] rounded-xl text-xs text-white focus:outline-none focus:border-[#2563EB]">
+              <option value="ALL">All Severities</option>
+              <option value="Critical">Critical</option>
+              <option value="High">High</option>
+              <option value="Medium">Medium</option>
+              <option value="Low">Low</option>
+            </select>
+            <select id="bugFilterStatus" onchange="filterBugs()" class="px-3 py-2 bg-[#111827] border border-[#1F2937] rounded-xl text-xs text-white focus:outline-none focus:border-[#2563EB]">
+              <option value="ALL">All Statuses</option>
+              <option value="Open">Open</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Resolved">Resolved</option>
+              <option value="Closed">Closed</option>
+            </select>
+          </div>
+          <button onclick="openModal('addBugModal')" class="px-4 py-2 bg-[#2563EB] hover:bg-blue-600 text-white rounded-xl text-xs font-semibold transition-all flex items-center space-x-2 self-start md:self-auto">
+            <i class="fa-solid fa-bug"></i>
+            <span>Log New Bug</span>
+          </button>
+        </div>
+
+        <!-- Bug Cards Container -->
+        <div id="bugContainer" class="space-y-4">
+          <!-- Rendered dynamically -->
+        </div>
+      </section>
+
+      <!-- SECTION 4: TEST CASES -->
+      <section id="section-testcases" class="space-y-6 hidden">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="flex items-center space-x-3">
+            <input type="text" id="testCaseSearch" oninput="filterTestCases()" placeholder="Search test cases..." class="px-4 py-2 bg-[#111827] border border-[#1F2937] rounded-xl text-xs text-white focus:outline-none focus:border-[#2563EB] w-64">
+            <select id="tcFilterResult" onchange="filterTestCases()" class="px-3 py-2 bg-[#111827] border border-[#1F2937] rounded-xl text-xs text-white focus:outline-none focus:border-[#2563EB]">
+              <option value="ALL">All Results</option>
+              <option value="Passed">Passed</option>
+              <option value="Failed">Failed</option>
+              <option value="Not Run">Not Run</option>
+              <option value="Blocked">Blocked</option>
+            </select>
+          </div>
+          <button onclick="openModal('addTestCaseModal')" class="px-4 py-2 bg-[#2563EB] hover:bg-blue-600 text-white rounded-xl text-xs font-semibold transition-all flex items-center space-x-2">
+            <i class="fa-solid fa-vial"></i>
+            <span>Create Test Case</span>
+          </button>
+        </div>
+
+        <!-- Test Cases Container -->
+        <div id="testCaseContainer" class="space-y-4">
+          <!-- Rendered dynamically -->
+        </div>
+      </section>
+
+      <!-- SECTION 5: TEAM & HIERARCHY -->
+      <section id="section-team" class="space-y-6 hidden">
+        <div class="flex justify-between items-center">
+          <h2 class="text-lg font-bold text-white">Team Structure & Hierarchy</h2>
+          <button onclick="openModal('addTeamModal')" class="px-4 py-2 bg-[#2563EB] hover:bg-blue-600 text-white rounded-xl text-xs font-semibold transition-all flex items-center space-x-2">
+            <i class="fa-solid fa-user-plus"></i>
+            <span>Add Team Member</span>
+          </button>
+        </div>
+
+        <!-- Hierarchy Groups -->
+        <div class="space-y-6">
+          <div>
+            <h3 class="text-xs font-bold text-[#38BDF8] uppercase tracking-wider mb-3 flex items-center">
+              <i class="fa-solid fa-user-tie mr-2"></i> QA Head / Management
+            </h3>
+            <div id="teamQaHeadList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+          </div>
+
+          <div>
+            <h3 class="text-xs font-bold text-[#38BDF8] uppercase tracking-wider mb-3 flex items-center">
+              <i class="fa-solid fa-laptop-code mr-2"></i> QA Testers & Developers
+            </h3>
+            <div id="teamEngineersList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+          </div>
+
+          <div>
+            <h3 class="text-xs font-bold text-[#38BDF8] uppercase tracking-wider mb-3 flex items-center">
+              <i class="fa-solid fa-handshake mr-2"></i> Clients & Stakeholders
+            </h3>
+            <div id="teamClientList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 6: REPORTS & QUALITY METRICS -->
+      <section id="section-reports" class="space-y-6 hidden">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-lg font-bold text-white">Reports & Quality Metrics</h2>
+            <p class="text-xs text-[#94A3B8]">Comprehensive Quality Assurance Logs & Analytical Summary</p>
+          </div>
+          <button onclick="openModal('addReportModal')" class="px-4 py-2 bg-[#2563EB] hover:bg-blue-600 text-white rounded-xl text-xs font-semibold transition-all flex items-center space-x-2">
+            <i class="fa-solid fa-file-circle-plus"></i>
+            <span>Add Bug Report Entry</span>
+          </button>
+        </div>
+
+        <!-- Report Analytical Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-[#111827] border border-[#1F2937] p-5 rounded-2xl text-center">
+            <span class="text-xs text-[#94A3B8]">Test Pass Rate</span>
+            <h2 id="reportPassRate" class="text-3xl font-bold text-[#22C55E] mt-1">0%</h2>
+            <p class="text-[10px] text-[#94A3B8] mt-1">Based on executed test cases</p>
+          </div>
+          <div class="bg-[#111827] border border-[#1F2937] p-5 rounded-2xl text-center">
+            <span class="text-xs text-[#94A3B8]">Defect Resolution Rate</span>
+            <h2 id="reportResolutionRate" class="text-3xl font-bold text-[#38BDF8] mt-1">0%</h2>
+            <p class="text-[10px] text-[#94A3B8] mt-1">Resolved vs Total Bugs</p>
+          </div>
+          <div class="bg-[#111827] border border-[#1F2937] p-5 rounded-2xl text-center">
+            <span class="text-xs text-[#94A3B8]">Critical Defect Ratio</span>
+            <h2 id="reportCriticalRatio" class="text-3xl font-bold text-[#EF4444] mt-1">0%</h2>
+            <p class="text-[10px] text-[#94A3B8] mt-1">Critical severity share</p>
+          </div>
+        </div>
+
+        <!-- Saved Bug Reports List -->
+        <div class="bg-[#111827] border border-[#1F2937] p-6 rounded-2xl">
+          <h3 class="text-sm font-semibold text-white mb-4 flex items-center">
+            <i class="fa-solid fa-box-archive text-[#38BDF8] mr-2"></i> Logged Bug Reports
+          </h3>
+          <div id="reportsList" class="space-y-3">
+            <!-- Dynamic reports -->
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODALS CONTAINER -->
+
+  <!-- Add Project Modal -->
+  <div id="addProjectModal" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-[#111827] border border-[#1F2937] rounded-2xl max-w-lg w-full p-6 space-y-4">
+      <div class="flex justify-between items-center border-b border-[#1F2937] pb-3">
+        <h3 class="font-bold text-white text-base">Add New Project</h3>
+        <button onclick="closeModal('addProjectModal')" class="text-[#94A3B8] hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form onsubmit="handleCreateProject(event)" class="space-y-4 text-xs">
+        <div>
+          <label class="block text-[#94A3B8] font-semibold mb-1">Project Name</label>
+          <input type="text" id="projName" required class="w-full px-3 py-2 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white focus:outline-none focus:border-[#2563EB]">
+        </div>
+        <div>
+          <label class="block text-[#94A3B8] font-semibold mb-1">Expected Project Outcome</label>
+          <textarea id="projOutcome" required rows="2" placeholder="Describe expected functional & quality objectives..." class="w-full px-3 py-2 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white focus:outline-none focus:border-[#2563EB]"></textarea>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-[#94A3B8] font-semibold mb-1">Status</label>
+            <select id="projStatus" class="w-full px-3 py-2 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white focus:outline-none">
+              <option value="On Going">On Going</option>
+              <option value="Resumed">Resumed</option>
+              <option value="Done">Done</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[#94A3B8] font-semibold mb-1">Initial Progress (%)</label>
+            <input type="number" id="projProgress" min="0" max="100" value="0" class="w-full px-3 py-2 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white focus:outline-none">
+          </div>
+        </div>
+        <div>
+          <label class="block text-[#94A3B8] font-semibold mb-1">Assigned Lead / Team</label>
+          <input type="text" id="projTeam" placeholder="e.g. QA Core Team Alpha" class="w-full px-3 py-2 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white focus:outline-none">
+        </div>
+        <div class="flex justify-end space-x-3 pt-3 border-t border-[#1F2937]">
+          <button type="button" onclick="closeModal('addProjectModal')" class="px-4 py-2 bg-[#0D1422] text-[#94A3B8] rounded-xl hover:text-white">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-[#2563EB] text-white rounded-xl hover:bg-blue-600 font-semibold">Save Project</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Bug Modal -->
+  <div id="addBugModal" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-[#111827] border border-[#1F2937] rounded-2xl max-w-xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-[#1F2937] pb-3">
+        <h3 class="font-bold text-white text-base">Log New Bug Defect</h3>
+        <button onclick="closeModal('addBugModal')" class="text-[#94A3B8] hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form onsubmit="handleCreateBug(event)" class="space-y-4 text-xs">
+        <div>
+          <label class="block text-[#94A3B8] font-semibold mb-1">Bug Title</label>
+          <input type="text" id="bugTitle" required placeholder="e.g. Authentication Token Timeout Bug" class="w-full px-3 py-2 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white focus:outline-none focus:border-[#2563EB]">
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block text-[#94A3B8] font-semibold mb-1">Project</label>
+            <select id="bugProjectSelect" required class="w-full px-3 py-2 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white focus:outline-none">
+              <!-- Dynamically populated -->
+            </select>
+          </div>
+          <div>
+            <label class="block text-[#94A3B8] font-semibold mb-1">Severity</label>
+            <select id="bugSeverity" class="w-full px-3 py-2 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white focus:outline-none">
+              <option value="Critical">Critical</option>
+              <option value="High">High</option>
+              <option value="Medium">Medium</option>
+              <option value="Low">Low</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[#94A3B8] font-semibold mb-1">Status</label>
+            <select id="bugStatus" class="w-full px-3 py-2 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white focus:outline-none">
+              <option value="Open">Open</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Resolved">Resolved</option>
+              <option value="Closed">Closed</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[#94A3B8] font-semibold mb-1">Description</label>
+          <textarea id="bugDescription" rows="2" placeholder="Summary of the issue..." class="w-full px-3 py-2 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white focus:outline-none"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-[#94A3B8] font-semibold mb-1">Steps to Reproduce</label>
+          <textarea id="bugSteps" rows="2" placeholder="1. Go to page... 2. Click button..." class="w-full px-3 py-2 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white focus:outline-none"></textarea>
+        </div>
+
+        <!-- Expected & Actual Result Fields -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-[#0D1422] p-3 rounded-xl border border-[#1F2937]">
+          <div>
+            <label class="block text-[#38BDF8] font-semibold mb-1"><i class="fa-solid fa-bullseye mr-1"></i> Expected Result</label>
+            <textarea id="bugExpected" required rows="2" placeholder="What should happen..." class="w-full px-3 py-2 bg-[#111827] border border-[#1F2937] rounded-xl text-white focus:outline-none"></textarea>
+          </div>
+          <div>
+            <label class="block text-[#EF4444] font-semibold mb-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Actual Result</label>
+            <textarea id="bugActual" required rows="2" placeholder="What actually happened..." class="w-full px-3 py-2 bg-[#111827] border border-[#1F2937] rounded-xl text-white focus:outline-none"></textarea>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[#94A3B8] font-semibold mb-1">Assigned Tester</label>
+            <input type="text" id="bugTester" placeholder="e.g. John Doe" class="w-full px-3 py-2 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-[#94A3B8] font-semibold mb-1">Assigned Developer</label>
+            <input type="text" id="bugDeveloper" placeholder="e.g. Sarah Smith" class="w-full px-3 py-2 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white focus:outline-none">
+          </div>
+        </div>
+
+        <div class="flex justify-end space-x-3 pt-3 border-t border-[#1F2937]">
+          <button type="button" onclick="closeModal('addBugModal')" class="px-4 py-2 bg-[#0D1422] text-[#94A3B8] rounded-xl hover:text-white">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-[#2563EB] text-white rounded-xl hover:bg-blue-600 font-semibold">Log Bug</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Test Case Modal -->
+  <div id="addTestCaseModal" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-[#111827] border border-[#1F2937] rounded-2xl max-w-xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-[#1F2937] pb-3">
+        <h3 class="font-bold text-white text-base">Create Test Case</h3>
+        <button onclick="closeModal('addTestCaseModal')" class="text-[#94A3B8] hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form onsubmit="handleCreateTestCase(event)" class="space-y-4 text-xs">
+        <div>
+          <label class="block text-[#94A3B8] font-semibold mb-1">Test Case Title</label>
+          <input type="text" id="tcTitle" required placeholder="e.g. Verify OAuth 2.0 User Login" class="w-full px-3 py-2 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white focus:outline-none focus:border-[#2563EB]">
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block text-[#94A3B8] font-semibold mb-1">Module</label>
+            <input type="text" id="tcModule" required placeholder="Authentication" class="w-full px-3 py-2 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-[#94A3B8] font-semibold mb-1">Priority</label>
+            <select id="tcPriority" class="w-full px-3 py-2 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white focus:outline-none">
+              <option value="High">High</option>
+              <option value="Critical">Critical</option>
+              <option value="Medium">Medium</option>
+              <option value="Low">Low</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[#94A3B8] font-semibold mb-1">Result</label>
+            <select id="tcResult" class="w-full px-3 py-2 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white focus:outline-none">
+              <option value="Not Run">Not Run</option>
+              <option value="Passed">Passed</option>
+              <option value="Failed">Failed</option>
+              <option value="Blocked">Blocked</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[#94A3B8] font-semibold mb-1">Preconditions</label>
+          <input type="text" id="tcPreconditions" placeholder="User registered in DB..." class="w-full px-3 py-2 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-[#94A3B8] font-semibold mb-1">Test Steps</label>
+          <textarea id="tcSteps" rows="2" placeholder="1. Enter email 2. Enter password..." class="w-full px-3 py-2 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white focus:outline-none"></textarea>
+        </div>
+
+        <!-- Expected & Actual Result Fields for Test Case -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-[#0D1422] p-3 rounded-xl border border-[#1F2937]">
+          <div>
+            <label class="block text-[#38BDF8] font-semibold mb-1"><i class="fa-solid fa-check-circle mr-1"></i> Expected Result</label>
+            <textarea id="tcExpected" required rows="2" placeholder="User should be logged in..." class="w-full px-3 py-2 bg-[#111827] border border-[#1F2937] rounded-xl text-white focus:outline-none"></textarea>
+          </div>
+          <div>
+            <label class="block text-[#F59E0B] font-semibold mb-1"><i class="fa-solid fa-clipboard-check mr-1"></i> Actual Result</label>
+            <textarea id="tcActual" required rows="2" placeholder="Recorded test observation..." class="w-full px-3 py-2 bg-[#111827] border border-[#1F2937] rounded-xl text-white focus:outline-none"></textarea>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[#94A3B8] font-semibold mb-1">Assigned Tester</label>
+          <input type="text" id="tcTester" placeholder="e.g. Alex Tester" class="w-full px-3 py-2 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white focus:outline-none">
+        </div>
+
+        <div class="flex justify-end space-x-3 pt-3 border-t border-[#1F2937]">
+          <button type="button" onclick="closeModal('addTestCaseModal')" class="px-4 py-2 bg-[#0D1422] text-[#94A3B8] rounded-xl hover:text-white">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-[#2563EB] text-white rounded-xl hover:bg-blue-600 font-semibold">Save Test Case</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Team Member Modal -->
+  <div id="addTeamModal" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-[#111827] border border-[#1F2937] rounded-2xl max-w-md w-full p-6 space-y-4">
+      <div class="flex justify-between items-center border-b border-[#1F2937] pb-3">
+        <h3 class="font-bold text-white text-base">Add Team Member</h3>
+        <button onclick="closeModal('addTeamModal')" class="text-[#94A3B8] hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form onsubmit="handleCreateMember(event)" class="space-y-4 text-xs">
+        <div>
+          <label class="block text-[#94A3B8] font-semibold mb-1">Full Name</label>
+          <input type="text" id="teamName" required placeholder="Jane Smith" class="w-full px-3 py-2 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white focus:outline-none">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[#94A3B8] font-semibold mb-1">Role</label>
+            <select id="teamRole" class="w-full px-3 py-2 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white focus:outline-none">
+              <option value="QA Tester">QA Tester</option>
+              <option value="Developer">Developer</option>
+              <option value="QA Head">QA Head</option>
+              <option value="Client">Client</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[#94A3B8] font-semibold mb-1">Department</label>
+            <input type="text" id="teamDept" placeholder="Software Quality" class="w-full px-3 py-2 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white focus:outline-none">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[#94A3B8] font-semibold mb-1">Status</label>
+            <select id="teamStatus" class="w-full px-3 py-2 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white focus:outline-none">
+              <option value="Active">Active</option>
+              <option value="Away">Away</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[#94A3B8] font-semibold mb-1">Assigned Tasks</label>
+            <input type="number" id="teamTasks" value="0" class="w-full px-3 py-2 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white focus:outline-none">
+          </div>
+        </div>
+        <div>
+          <label class="block text-[#94A3B8] font-semibold mb-1">Assigned Projects</label>
+          <input type="text" id="teamProjects" placeholder="e.g. E-Commerce Platform" class="w-full px-3 py-2 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white focus:outline-none">
+        </div>
+        <div class="flex justify-end space-x-3 pt-3 border-t border-[#1F2937]">
+          <button type="button" onclick="closeModal('addTeamModal')" class="px-4 py-2 bg-[#0D1422] text-[#94A3B8] rounded-xl hover:text-white">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-[#2563EB] text-white rounded-xl hover:bg-blue-600 font-semibold">Add Member</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Report Modal -->
+  <div id="addReportModal" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-[#111827] border border-[#1F2937] rounded-2xl max-w-md w-full p-6 space-y-4">
+      <div class="flex justify-between items-center border-b border-[#1F2937] pb-3">
+        <h3 class="font-bold text-white text-base">Add Bug Report Entry</h3>
+        <button onclick="closeModal('addReportModal')" class="text-[#94A3B8] hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form onsubmit="handleCreateReport(event)" class="space-y-4 text-xs">
+        <div>
+          <label class="block text-[#94A3B8] font-semibold mb-1">Report Title</label>
+          <input type="text" id="reportTitle" required placeholder="e.g. Sprint 14 Bug Regression Summary" class="w-full px-3 py-2 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-[#94A3B8] font-semibold mb-1">Target Project</label>
+          <select id="reportProjectSelect" required class="w-full px-3 py-2 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white focus:outline-none">
+            <!-- Dynamically populated -->
+          </select>
+        </div>
+        <div>
+          <label class="block text-[#94A3B8] font-semibold mb-1">Summary / Observations</label>
+          <textarea id="reportNotes" rows="3" required placeholder="Enter key observations, bug density analysis..." class="w-full px-3 py-2 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white focus:outline-none"></textarea>
+        </div>
+        <div class="flex justify-end space-x-3 pt-3 border-t border-[#1F2937]">
+          <button type="button" onclick="closeModal('addReportModal')" class="px-4 py-2 bg-[#0D1422] text-[#94A3B8] rounded-xl hover:text-white">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-[#2563EB] text-white rounded-xl hover:bg-blue-600 font-semibold">Save Report Entry</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Forgot Password Modal -->
+  <div id="forgotPasswordModal" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-[#111827] border border-[#1F2937] rounded-2xl max-w-sm w-full p-6 space-y-4">
+      <div class="flex justify-between items-center border-b border-[#1F2937] pb-3">
+        <h3 class="font-bold text-white text-base">Reset Password</h3>
+        <button onclick="closeModal('forgotPasswordModal')" class="text-[#94A3B8] hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <p class="text-xs text-[#94A3B8]">Enter your registered email address and we will send a password reset verification token.</p>
+      <input type="email" id="resetEmail" placeholder="test@qa.com" class="w-full px-3 py-2 bg-[#0D1422] border border-[#1F2937] rounded-xl text-white text-xs focus:outline-none">
+      <div class="flex justify-end space-x-2 pt-2">
+        <button onclick="closeModal('forgotPasswordModal')" class="px-3 py-1.5 bg-[#0D1422] text-xs text-[#94A3B8] rounded-lg">Cancel</button>
+        <button onclick="handleResetPassword()" class="px-3 py-1.5 bg-[#2563EB] text-xs text-white rounded-lg hover:bg-blue-600">Send Reset Link</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail View Modal -->
+  <div id="detailViewModal" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-[#111827] border border-[#1F2937] rounded-2xl max-w-lg w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-[#1F2937] pb-3">
+        <h3 id="detailModalTitle" class="font-bold text-white text-base">Item Detail</h3>
+        <button onclick="closeModal('detailViewModal')" class="text-[#94A3B8] hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="detailModalBody" class="space-y-3 text-xs">
+        <!-- Rendered dynamically -->
+      </div>
+      <div class="flex justify-end pt-3 border-t border-[#1F2937]">
+        <button onclick="closeModal('detailViewModal')" class="px-4 py-2 bg-[#2563EB] text-white rounded-xl text-xs font-semibold">Close</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- APPLICATION SCRIPT LOGIC -->
+  <script>
+    // LocalStorage Keys
+    const USERS_KEY = 'qa_app_users_v2';
+    const SESSION_KEY = 'qa_app_session_v2';
+    const DATA_KEY = 'qa_app_data_v2';
+
+    // Default Seed Data
+    const defaultData = {
+      projects: [
+        { id: 'p1', name: 'FinTech Payment Gateway', outcome: 'Achieve 99.99% uptime and sub-second payment processing with PCI-DSS compliance.', status: 'On Going', progress: 75, team: 'Payments QA Team' },
+        { id: 'p2', name: 'Mobile Health Tracker App', outcome: 'Deliver seamless HIPAA compliant real-time biometric tracking across iOS and Android.', status: 'Resumed', progress: 45, team: 'Mobile QA Squad' },
+        { id: 'p3', name: 'Enterprise ERP Suite', outcome: 'Complete migration to cloud infrastructure with zero regression in reporting modules.', status: 'Done', progress: 100, team: 'ERP Quality Core' }
+      ],
+      bugs: [
+        { id: 'b1', projectId: 'p1', title: 'Payment Gateway Timeout on 3DS Authentication', severity: 'Critical', status: 'Open', description: 'When submitting high value transactions, the 3DS verification times out.', steps: '1. Select items > 2. Checkout with 3DS card > 3. Wait for challenge modal', expected: '3DS OTP modal completes within 2 seconds.', actual: 'Request hangs for 30s then returns HTTP 504 gateway timeout.', tester: 'Alex Turner', developer: 'David Chen', date: '2026-09-25' },
+        { id: 'b2', projectId: 'p2', title: 'Heart Rate Graph Distortion on Landscape Mode', severity: 'Medium', status: 'In Progress', description: 'Rotating device into landscape causes graph rendering overflow.', steps: '1. Open health dashboard > 2. Enable auto-rotate > 3. Flip phone horizontally', expected: 'Graph resizes smoothly staying inside view boundaries.', actual: 'Canvas overlaps navigation bar and clips right axis labels.', tester: 'Maria Garcia', developer: 'Chris Evans', date: '2026-09-26' },
+        { id: 'b3', projectId: 'p1', title: 'Currency Conversion Rounding Errors', severity: 'High', status: 'Resolved', description: 'EUR to USD conversions off by $0.01 on bulk cart totals.', steps: '1. Add 10 items in EUR > 2. Switch currency to USD', expected: 'Precision rounded to 2 decimal places accurately.', actual: 'Total accumulates penny rounding drift on subtotal.', tester: 'Alex Turner', developer: 'David Chen', date: '2026-09-20' },
+        { id: 'b4', projectId: 'p3', title: 'Export PDF Report Button Unresponsive', severity: 'Low', status: 'Closed', description: 'Clicking Export PDF does not trigger file download on Safari.', steps: '1. Navigate to Executive Summary > 2. Click Export PDF', expected: 'PDF binary stream triggers browser download dialog.', actual: 'Console error: Refused to load blob URL.', tester: 'Sam Wilson', developer: 'Jane Doe', date: '2026-09-18' }
+      ],
+      testCases: [
+        { id: 'tc1', module: 'Authentication', title: 'Verify Multi-Factor Authentication Flow', priority: 'High', result: 'Passed', preconditions: 'User account with MFA enabled.', steps: '1. Enter credentials > 2. Input 6-digit TOTP code', expected: 'User is authenticated and redirected to dashboard.', actual: 'Redirected successfully to dashboard with valid JWT.', tester: 'Alex Turner', date: '2026-09-27' },
+        { id: 'tc2', module: 'Checkout', title: 'Verify Discount Coupon Application', priority: 'Medium', result: 'Failed', preconditions: 'Cart total > $50.', steps: '1. Enter code "FALL2026" > 2. Click Apply', expected: '20% discount subtracted from subtotal.', actual: 'Discount code applied twice giving 40% discount.', tester: 'Maria Garcia', date: '2026-09-27' },
+        { id: 'tc3', module: 'User Profile', title: 'Verify Profile Picture Upload Limits', priority: 'Low', result: 'Not Run', preconditions: 'PNG file exceeding 5MB.', steps: '1. Choose image > 2. Upload file', expected: 'Validation error: File size exceeds 5MB limit.', actual: 'Not executed yet.', tester: 'Sam Wilson', date: '2026-09-28' },
+        { id: 'tc4', module: 'Reporting', title: 'Verify CSV Export with 10k Records', priority: 'Critical', result: 'Blocked', preconditions: 'Database populated with mock records.', steps: '1. Filter records > 2. Click Export CSV', expected: 'CSV generated in background within 5 seconds.', actual: 'Blocked due to server memory allocation failure on staging.', tester: 'Alex Turner', date: '2026-09-24' }
+      ],
+      team: [
+        { id: 'tm1', name: 'Dr. Evelyn Vance', role: 'QA Head', department: 'Executive Quality', status: 'Active', projects: 'All Projects', tasks: 12 },
+        { id: 'tm2', name: 'Alex Turner', role: 'QA Tester', department: 'Automation & Regressions', status: 'Active', projects: 'FinTech Payment Gateway', tasks: 8 },
+        { id: 'tm3', name: 'David Chen', role: 'Developer', department: 'Backend Core', status: 'Active', projects: 'FinTech Payment Gateway', tasks: 5 },
+        { id: 'tm4', name: 'Samantha Reed', role: 'Client', department: 'FinTech Stakeholder', status: 'Away', projects: 'FinTech Payment Gateway', tasks: 2 }
+      ],
+      reports: [
+        { id: 'r1', title: 'Sprint 14 Defect Assessment', projectId: 'p1', notes: 'High severity bugs concentrated in payment gateway timeout module. Recommendation: Conduct load tests.', date: '2026-09-25' },
+        { id: 'r2', title: 'Mobile App Regression Summary', projectId: 'p2', notes: 'Pass rate improved to 82%. UI responsiveness issues pending fix.', date: '2026-09-27' }
+      ],
+      activities: [
+        { id: 'a1', text: 'Alex Turner logged bug: Payment Gateway Timeout on 3DS Authentication', time: '10 mins ago' },
+        { id: 'a2', text: 'David Chen changed bug status to Resolved on Currency Conversion', time: '1 hour ago' },
+        { id: 'a3', text: 'Maria Garcia marked test case "Verify Discount Coupon" as Failed', time: '3 hours ago' }
+      ]
+    };
+
+    // Application Global State
+    let appData = { ...defaultData };
+    let currentUser = null;
+    let bugChartInstance = null;
+    let statusChartInstance = null;
+
+    window.onload = function() {
+      initStorage();
+      checkSession();
+      startClock();
+    };
+
+    function startClock() {
+      setInterval(() => {
+        const now = new Date();
+        const clockEl = document.getElementById('systemClock');
+        if (clockEl) clockEl.innerText = now.toLocaleTimeString();
+      }, 1000);
+    }
+
+    function initStorage() {
+      // Seed default users if empty
+      if (!localStorage.getItem(USERS_KEY)) {
+        const initialUsers = [
+          { email: 'test@qa.com', password: 'password', name: 'Lead Tester Alex', role: 'QA Head' }
+        ];
+        localStorage.setItem(USERS_KEY, JSON.stringify(initialUsers));
+      }
+
+      // Seed default data if empty
+      if (!localStorage.getItem(DATA_KEY)) {
+        localStorage.setItem(DATA_KEY, JSON.stringify(defaultData));
+      } else {
+        appData = JSON.parse(localStorage.getItem(DATA_KEY));
+      }
+    }
+
+    function saveData() {
+      localStorage.setItem(DATA_KEY, JSON.stringify(appData));
+      renderDashboard();
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      
+      let borderCol = 'border-blue-500';
+      let icon = 'fa-circle-info text-blue-400';
+      if (type === 'success') { borderCol = 'border-[#22C55E]'; icon = 'fa-circle-check text-[#22C55E]'; }
+      if (type === 'error') { borderCol = 'border-[#EF4444]'; icon = 'fa-circle-xmark text-[#EF4444]'; }
+      if (type === 'warning') { borderCol = 'border-[#F59E0B]'; icon = 'fa-triangle-exclamation text-[#F59E0B]'; }
+
+      toast.className = `pointer-events-auto flex items-center space-x-3 bg-[#111827] border-l-4 ${borderCol} text-white text-xs px-4 py-3 rounded-xl shadow-xl transition-all transform translate-y-2 opacity-0`;
+      toast.innerHTML = `<i class="fa-solid ${icon} text-base"></i><span>${message}</span>`;
+      
+      container.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      }, 10);
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    function togglePasswordVisibility(id, btn) {
+      const input = document.getElementById(id);
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.innerHTML = '<i class="fa-solid fa-eye-slash"></i>';
+      } else {
+        input.type = 'password';
+        btn.innerHTML = '<i class="fa-solid fa-eye"></i>';
+      }
+    }
+
+    // AUTHENTICATION LOGIC
+    function switchAuthTab(tab) {
+      const loginForm = document.getElementById('loginForm');
+      const regForm = document.getElementById('registerForm');
+      const loginTabBtn = document.getElementById('loginTabBtn');
+      const regTabBtn = document.getElementById('registerTabBtn');
+
+      if (tab === 'login') {
+        loginForm.classList.remove('hidden');
+        regForm.classList.add('hidden');
+        loginTabBtn.className = 'flex-1 py-2 text-sm font-medium rounded-lg bg-[#2563EB] text-white transition-all shadow';
+        regTabBtn.className = 'flex-1 py-2 text-sm font-medium rounded-lg text-[#94A3B8] hover:text-white transition-all';
+      } else {
+        loginForm.classList.add('hidden');
+        regForm.classList.remove('hidden');
+        regTabBtn.className = 'flex-1 py-2 text-sm font-medium rounded-lg bg-[#2563EB] text-white transition-all shadow';
+        loginTabBtn.className = 'flex-1 py-2 text-sm font-medium rounded-lg text-[#94A3B8] hover:text-white transition-all';
+      }
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      const pass = document.getElementById('loginPassword').value.trim();
+      
+      const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
+      const user = users.find(u => u.email === email && u.password === pass);
+
+      if (user) {
+        currentUser = user;
+        localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+        showToast(`Welcome back, ${user.name}!`, 'success');
+        launchApp();
+      } else {
+        showToast('Invalid email or password credentials.', 'error');
+      }
+    }
+
+    function handleRegister(e) {
+      e.preventDefault();
+      const name = document.getElementById('regName').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const role = document.getElementById('regRole').value;
+      const pass = document.getElementById('regPassword').value.trim();
+
+      const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
+      if (users.some(u => u.email === email)) {
+        showToast('User email already registered!', 'warning');
+        return;
+      }
+
+      const newUser = { name, email, role, password: pass };
+      users.push(newUser);
+      localStorage.setItem(USERS_KEY, JSON.stringify(users));
+
+      // Also add to team members if not present
+      appData.team.push({
+        id: 'tm_' + Date.now(),
+        name: name,
+        role: role,
+        department: 'QA Portal',
+        status: 'Active',
+        projects: 'General QA',
+        tasks: 0
+      });
+      saveData();
+
+      showToast('Registration successful! Please login.', 'success');
+      switchAuthTab('login');
+      document.getElementById('loginEmail').value = email;
+      document.getElementById('loginPassword').value = pass;
+    }
+
+    function checkSession() {
+      const session = localStorage.getItem(SESSION_KEY);
+      if (session) {
+        currentUser = JSON.parse(session);
+        launchApp();
+      } else {
+        document.getElementById('authSection').classList.remove('hidden');
+        document.getElementById('mainApp').classList.add('hidden');
+      }
+    }
+
+    function handleLogout() {
+      localStorage.removeItem(SESSION_KEY);
+      currentUser = null;
+      document.getElementById('authSection').classList.remove('hidden');
+      document.getElementById('mainApp').classList.add('hidden');
+      showToast('Logged out successfully.', 'info');
+    }
+
+    function handleResetPassword() {
+      const email = document.getElementById('resetEmail').value.trim();
+      if (!email) {
+        showToast('Please enter your email.', 'warning');
+        return;
+      }
+      showToast('Password reset link sent to your email.', 'success');
+      closeModal('forgotPasswordModal');
+    }
+
+    function launchApp() {
+      document.getElementById('authSection').classList.add('hidden');
+      document.getElementById('mainApp').classList.remove('hidden');
+
+      // Update User Info Display
+      document.getElementById('userNameDisplay').innerText = currentUser.name || 'QA User';
+      document.getElementById('userRoleDisplay').innerText = currentUser.role || 'QA Engineer';
+      document.getElementById('userAvatar').innerText = (currentUser.name || 'QA').substring(0,2).toUpperCase();
+
+      renderDashboard();
+      renderProjects();
+      renderBugs();
+      renderTestCases();
+      renderTeam();
+      renderReports();
+      populateProjectDropdowns();
+    }
+
+    // NAVIGATION LOGIC
+    function navigateTo(section, filterParam = null) {
+      document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.className = 'nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#94A3B8] hover:bg-[#111827] hover:text-white transition-all';
+      });
+
+      const targetSection = document.getElementById(`section-${section}`);
+      const targetNav = document.getElementById(`nav-${section}`);
+
+      if (targetSection) targetSection.classList.remove('hidden');
+      if (targetNav) targetNav.className = 'nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all bg-[#2563EB] text-white';
+
+      // Title & Subtitle updates
+      const titleEl = document.getElementById('pageTitle');
+      const subEl = document.getElementById('pageSubtitle');
+
+      if (section === 'dashboard') {
+        titleEl.innerText = 'Dashboard Overview';
+        subEl.innerText = 'Real-time Software Quality Metrics & Defect Status';
+        renderDashboard();
+      } else if (section === 'projects') {
+        titleEl.innerText = 'Projects Management';
+        subEl.innerText = 'Track project status, expected outcomes, and team coverage';
+        renderProjects();
+      } else if (section === 'bugs') {
+        titleEl.innerText = 'Bug Management';
+        subEl.innerText = 'Track bugs, defect severity, actual results, and resolution dropdowns';
+        if (filterParam) {
+          if (['Critical', 'High', 'Medium', 'Low'].includes(filterParam)) {
+            document.getElementById('bugFilterSeverity').value = filterParam;
+          } else {
+            document.getElementById('bugFilterStatus').value = filterParam;
+          }
+        }
+        renderBugs();
+      } else if (section === 'testcases') {
+        titleEl.innerText = 'Test Cases';
+        subEl.innerText = 'Manage test suites, execution states, and expected vs actual outcomes';
+        renderTestCases();
+      } else if (section === 'team') {
+        titleEl.innerText = 'Team Hierarchy';
+        subEl.innerText = 'Manage QA Heads, Testers, Developers, and Clients';
+        renderTeam();
+      } else if (section === 'reports') {
+        titleEl.innerText = 'Reports & Quality Metrics';
+        subEl.innerText = 'Quality analytics, resolution pass rates, and bug report entries';
+        renderReports();
+      }
+    }
+
+    function renderDashboard() {
+      const bugs = appData.bugs || [];
+      const testCases = appData.testCases || [];
+      const projects = appData.projects || [];
+
+      const totalBugs = bugs.length;
+      const criticalBugs = bugs.filter(b => b.severity === 'Critical').length;
+      const pendingBugs = bugs.filter(b => b.status === 'Open' || b.status === 'In Progress').length;
+      const resolvedBugs = bugs.filter(b => b.status === 'Resolved' || b.status === 'Closed').length;
+
+      const progressVal = totalBugs > 0 ? Math.round((resolvedBugs / totalBugs) * 100) : 100;
+
+      document.getElementById('statTotalProjects').innerText = projects.length;
+      document.getElementById('statTotalBugs').innerText = totalBugs;
+      document.getElementById('statCriticalBugs').innerText = criticalBugs;
+      document.getElementById('statPendingBugs').innerText = pendingBugs;
+      document.getElementById('statResolvedBugs').innerText = resolvedBugs;
+      document.getElementById('statTotalTestCases').innerText = testCases.length;
+      document.getElementById('statQaProgress').innerText = progressVal + '%';
+      document.getElementById('statProgressBar').style.width = progressVal + '%';
+
+      // Render Charts
+      renderCharts(bugs);
+
+      // Render Activity Feed
+      const actList = document.getElementById('recentActivityList');
+      actList.innerHTML = (appData.activities || []).map(a => `
+        <div class="flex items-center justify-between p-3 bg-[#0D1422] rounded-xl border border-[#1F2937]">
+          <div class="flex items-center space-x-3">
+            <span class="w-2 h-2 rounded-full bg-[#38BDF8]"></span>
+            <span>${a.text}</span>
+          </div>
+          <span class="text-[10px] text-[#94A3B8] font-mono">${a.time}</span>
+        </div>
+      `).join('');
+    }
+
+    function renderCharts(bugs) {
+      // Severity Count
+      const sevCounts = { Critical: 0, High: 0, Medium: 0, Low: 0 };
+      const statusCounts = { Open: 0, 'In Progress': 0, Resolved: 0, Closed: 0 };
+
+      bugs.forEach(b => {
+        if (sevCounts[b.severity] !== undefined) sevCounts[b.severity]++;
+        if (statusCounts[b.status] !== undefined) statusCounts[b.status]++;
+      });
+
+      // Severity Donut Chart
+      const ctxSev = document.getElementById('bugSeverityChart').getContext('2d');
+      if (bugChartInstance) bugChartInstance.destroy();
+
+      bugChartInstance = new Chart(ctxSev, {
+        type: 'doughnut',
+        data: {
+          labels: ['Critical', 'High', 'Medium', 'Low'],
+          datasets: [{
+            data: [sevCounts.Critical, sevCounts.High, sevCounts.Medium, sevCounts.Low],
+            backgroundColor: ['#EF4444', '#F59E0B', '#2563EB', '#22C55E'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { color: '#94A3B8', font: { family: 'Inter', size: 11 } } }
+          }
+        }
+      });
+
+      // Status Bar Chart
+      const ctxStatus = document.getElementById('bugStatusChart').getContext('2d');
+      if (statusChartInstance) statusChartInstance.destroy();
+
+      statusChartInstance = new Chart(ctxStatus, {
+        type: 'bar',
+        data: {
+          labels: ['Open', 'In Progress', 'Resolved', 'Closed'],
+          datasets: [{
+            label: 'Defects',
+            data: [statusCounts.Open, statusCounts['In Progress'], statusCounts.Resolved, statusCounts.Closed],
+            backgroundColor: ['#EF4444', '#F59E0B', '#22C55E', '#38BDF8'],
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { ticks: { color: '#94A3B8' }, grid: { color: '#1F2937' } },
+            x: { ticks: { color: '#94A3B8' }, grid: { display: false } }
+          },
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+
+    function addActivity(text) {
+      appData.activities.unshift({
+        id: 'a_' + Date.now(),
+        text: text,
+        time: 'Just now'
+      });
+      if (appData.activities.length > 8) appData.activities.pop();
+    }
+
+    function renderProjects() {
+      const container = document.getElementById('projectsGrid');
+      container.innerHTML = appData.projects.map(p => `
+        <div class="bg-[#111827] border border-[#1F2937] p-5 rounded-2xl flex flex-col justify-between hover:border-[#2563EB] transition-all">
+          <div>
+            <div class="flex justify-between items-start mb-3">
+              <h3 class="font-bold text-white text-base">${p.name}</h3>
+              <select onchange="updateProjectStatus('${p.id}', this.value)" class="text-[10px] font-semibold px-2.5 py-1 rounded-lg bg-[#0D1422] border border-[#1F2937] text-[#38BDF8] focus:outline-none">
+                <option value="On Going" ${p.status === 'On Going' ? 'selected' : ''}>On Going</option>
+                <option value="Resumed" ${p.status === 'Resumed' ? 'selected' : ''}>Resumed</option>
+                <option value="Done" ${p.status === 'Done' ? 'selected' : ''}>Done</option>
+              </select>
+            </div>
+            
+            <div class="mb-4 bg-[#0D1422] p-3 rounded-xl border border-[#1F2937]">
+              <span class="text-[10px] text-[#38BDF8] font-bold uppercase tracking-wider block mb-1">Expected Outcome</span>
+              <p class="text-xs text-[#94A3B8] leading-relaxed">${p.outcome || 'N/A'}</p>
+            </div>
+
+            <div class="space-y-2 mb-4">
+              <div class="flex justify-between text-xs text-[#94A3B8]">
+                <span>Progress</span>
+                <span class="font-semibold text-white">${p.progress}%</span>
+              </div>
+              <div class="w-full bg-[#0D1422] h-2 rounded-full overflow-hidden">
+                <div class="bg-[#2563EB] h-full" style="width: ${p.progress}%"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-3 border-t border-[#1F2937] flex items-center justify-between text-xs text-[#94A3B8]">
+            <span class="flex items-center"><i class="fa-solid fa-[#38BDF8] fa-users mr-1.5 text-[#38BDF8]"></i>${p.team}</span>
+            <button onclick="deleteProject('${p.id}')" class="text-[#EF4444] hover:text-red-400 p-1"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateProjectStatus(id, newStatus) {
+      const proj = appData.projects.find(p => p.id === id);
+      if (proj) {
+        proj.status = newStatus;
+        saveData();
+        showToast(`Project status updated to ${newStatus}`, 'success');
+      }
+    }
+
+    function handleCreateProject(e) {
+      e.preventDefault();
+      const newProj = {
+        id: 'p_' + Date.now(),
+        name: document.getElementById('projName').value.trim(),
+        outcome: document.getElementById('projOutcome').value.trim(),
+        status: document.getElementById('projStatus').value,
+        progress: parseInt(document.getElementById('projProgress').value) || 0,
+        team: document.getElementById('projTeam').value.trim() || 'QA Core Team'
+      };
+
+      appData.projects.push(newProj);
+      addActivity(`New project added: ${newProj.name}`);
+      saveData();
+      renderProjects();
+      populateProjectDropdowns();
+      closeModal('addProjectModal');
+      showToast('Project created successfully!', 'success');
+    }
+
+    function deleteProject(id) {
+      appData.projects = appData.projects.filter(p => p.id !== id);
+      saveData();
+      renderProjects();
+      populateProjectDropdowns();
+      showToast('Project deleted', 'info');
+    }
+
+    function renderBugs() {
+      const container = document.getElementById('bugContainer');
+      const search = (document.getElementById('bugSearch')?.value || '').toLowerCase();
+      const sevFilter = document.getElementById('bugFilterSeverity')?.value || 'ALL';
+      const statusFilter = document.getElementById('bugFilterStatus')?.value || 'ALL';
+
+      let filtered = appData.bugs.filter(b => {
+        const matchesSearch = b.title.toLowerCase().includes(search) || (b.description || '').toLowerCase().includes(search);
+        const matchesSev = sevFilter === 'ALL' || b.severity === sevFilter;
+        const matchesStatus = statusFilter === 'ALL' || b.status === statusFilter;
+        return matchesSearch && matchesSev && matchesStatus;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="p-8 text-center text-[#94A3B8] bg-[#111827] rounded-2xl border border-[#1F2937]">No bugs found matching current filter criteria.</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(b => {
+        const project = appData.projects.find(p => p.id === b.projectId);
+        const projName = project ? project.name : 'General Project';
+
+        return `
+          <div class="bg-[#111827] border border-[#1F2937] p-5 rounded-2xl space-y-4 hover:border-[#2563EB] transition-all">
+            <!-- Bug Card Header -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-[#1F2937] pb-3">
+              <div class="space-y-1">
+                <div class="flex items-center space-x-2">
+                  <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-[#0D1422] text-[#38BDF8] border border-[#1F2937]">${b.id.toUpperCase()}</span>
+                  <span class="text-xs text-[#94A3B8] font-medium"><i class="fa-solid fa-folder text-[#2563EB] mr-1"></i>${projName}</span>
+                </div>
+                <h3 class="font-bold text-white text-base">${b.title}</h3>
+              </div>
+
+              <!-- Inline Quick Dropdowns for Bug Severity & Status -->
+              <div class="flex items-center space-x-3">
+                <!-- Severity Dropdown -->
+                <div class="flex flex-col">
+                  <label class="text-[9px] text-[#94A3B8] uppercase font-semibold mb-0.5">Severity</label>
+                  <select onchange="updateBugField('${b.id}', 'severity', this.value)" class="text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-[#0D1422] border border-[#1F2937] text-white focus:outline-none">
+                    <option value="Critical" ${b.severity === 'Critical' ? 'selected' : ''} class="text-[#EF4444]">Critical</option>
+                    <option value="High" ${b.severity === 'High' ? 'selected' : ''} class="text-[#F59E0B]">High</option>
+                    <option value="Medium" ${b.severity === 'Medium' ? 'selected' : ''} class="text-[#2563EB]">Medium</option>
+                    <option value="Low" ${b.severity === 'Low' ? 'selected' : ''} class="text-[#22C55E]">Low</option>
+                  </select>
+                </div>
+
+                <!-- Status Dropdown -->
+                <div class="flex flex-col">
+                  <label class="text-[9px] text-[#94A3B8] uppercase font-semibold mb-0.5">Status</label>
+                  <select onchange="updateBugField('${b.id}', 'status', this.value)" class="text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-[#0D1422] border border-[#1F2937] text-white focus:outline-none">
+                    <option value="Open" ${b.status === 'Open' ? 'selected' : ''}>Open</option>
+                    <option value="In Progress" ${b.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                    <option value="Resolved" ${b.status === 'Resolved' ? 'selected' : ''}>Resolved</option>
+                    <option value="Closed" ${b.status === 'Closed' ? 'selected' : ''}>Closed</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Description -->
+            <p class="text-xs text-[#94A3B8]">${b.description || 'No description provided.'}</p>
+
+            <!-- Expected vs Actual Result Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div class="bg-[#0D1422] p-3 rounded-xl border border-[#1F2937]">
+                <span class="text-[10px] text-[#38BDF8] font-bold uppercase tracking-wider flex items-center mb-1">
+                  <i class="fa-solid fa-bullseye mr-1.5"></i> Expected Result
+                </span>
+                <p class="text-xs text-[#F1F5F9] leading-relaxed">${b.expected || 'N/A'}</p>
+              </div>
+
+              <div class="bg-[#0D1422] p-3 rounded-xl border border-[#1F2937]">
+                <span class="text-[10px] text-[#EF4444] font-bold uppercase tracking-wider flex items-center mb-1">
+                  <i class="fa-solid fa-triangle-exclamation mr-1.5"></i> Actual Result
+                </span>
+                <p class="text-xs text-[#F1F5F9] leading-relaxed">${b.actual || 'N/A'}</p>
+              </div>
+            </div>
+
+            <!-- Footer Details & Actions -->
+            <div class="flex flex-wrap items-center justify-between text-xs text-[#94A3B8] pt-2 border-t border-[#1F2937] gap-2">
+              <div class="flex items-center space-x-4">
+                <span><i class="fa-solid fa-user-check text-[#38BDF8] mr-1"></i>Tester: <strong class="text-white">${b.tester || 'Unassigned'}</strong></span>
+                <span><i class="fa-solid fa-code text-[#2563EB] mr-1"></i>Dev: <strong class="text-white">${b.developer || 'Unassigned'}</strong></span>
+              </div>
+              <div class="flex items-center space-x-3">
+                <button onclick="viewBugDetails('${b.id}')" class="px-3 py-1 bg-[#0D1422] hover:bg-[#1F2937] text-white rounded-lg border border-[#1F2937] transition-all">View Details</button>
+                <button onclick="deleteBug('${b.id}')" class="text-[#EF4444] hover:text-red-400 p-1"><i class="fa-solid fa-trash"></i></button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function filterBugs() {
+      renderBugs();
+    }
+
+    function updateBugField(id, field, value) {
+      const bug = appData.bugs.find(b => b.id === id);
+      if (bug) {
+        bug[field] = value;
+        addActivity(`Updated bug ${bug.title} ${field} to ${value}`);
+        saveData();
+        showToast(`Bug ${field} updated to ${value}`, 'success');
+      }
+    }
+
+    function handleCreateBug(e) {
+      e.preventDefault();
+      const newBug = {
+        id: 'b_' + Date.now(),
+        title: document.getElementById('bugTitle').value.trim(),
+        projectId: document.getElementById('bugProjectSelect').value,
+        severity: document.getElementById('bugSeverity').value,
+        status: document.getElementById('bugStatus').value,
+        description: document.getElementById('bugDescription').value.trim(),
+        steps: document.getElementById('bugSteps').value.trim(),
+        expected: document.getElementById('bugExpected').value.trim(),
+        actual: document.getElementById('bugActual').value.trim(),
+        tester: document.getElementById('bugTester').value.trim() || currentUser.name,
+        developer: document.getElementById('bugDeveloper').value.trim() || 'Unassigned',
+        date: new Date().toISOString().split('T')[0]
+      };
+
+      appData.bugs.unshift(newBug);
+      addActivity(`Logged new bug: ${newBug.title}`);
+      saveData();
+      renderBugs();
+      closeModal('addBugModal');
+      showToast('Bug logged successfully!', 'success');
+    }
+
+    function deleteBug(id) {
+      appData.bugs = appData.bugs.filter(b => b.id !== id);
+      saveData();
+      renderBugs();
+      showToast('Bug entry deleted', 'info');
+    }
+
+    function viewBugDetails(id) {
+      const bug = appData.bugs.find(b => b.id === id);
+      if (!bug) return;
+
+      const proj = appData.projects.find(p => p.id === bug.projectId);
+
+      document.getElementById('detailModalTitle').innerText = 'Bug Details - ' + bug.id.toUpperCase();
+      document.getElementById('detailModalBody').innerHTML = `
+        <div class="space-y-3">
+          <div><span class="text-[#94A3B8]">Title:</span> <strong class="text-white">${bug.title}</strong></div>
+          <div><span class="text-[#94A3B8]">Project:</span> <span class="text-[#38BDF8]">${proj ? proj.name : 'N/A'}</span></div>
+          <div class="flex space-x-4">
+            <div><span class="text-[#94A3B8]">Severity:</span> <span class="font-bold text-[#F59E0B]">${bug.severity}</span></div>
+            <div><span class="text-[#94A3B8]">Status:</span> <span class="font-bold text-[#22C55E]">${bug.status}</span></div>
+          </div>
+          <div><span class="text-[#94A3B8]">Description:</span><p class="mt-1 bg-[#0D1422] p-2 rounded border border-[#1F2937]">${bug.description || 'N/A'}</p></div>
+          <div><span class="text-[#94A3B8]">Steps to Reproduce:</span><p class="mt-1 bg-[#0D1422] p-2 rounded border border-[#1F2937] font-mono text-[11px]">${bug.steps || 'N/A'}</p></div>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="bg-[#0D1422] p-2 rounded border border-[#1F2937]"><span class="text-[#38BDF8] font-bold block">Expected Result</span><p>${bug.expected || 'N/A'}</p></div>
+            <div class="bg-[#0D1422] p-2 rounded border border-[#1F2937]"><span class="text-[#EF4444] font-bold block">Actual Result</span><p>${bug.actual || 'N/A'}</p></div>
+          </div>
+          <div class="flex justify-between text-[#94A3B8]">
+            <span>Tester: ${bug.tester}</span>
+            <span>Developer: ${bug.developer}</span>
+          </div>
+        </div>
+      `;
+      openModal('detailViewModal');
+    }
+
+    function renderTestCases() {
+      const container = document.getElementById('testCaseContainer');
+      const search = (document.getElementById('testCaseSearch')?.value || '').toLowerCase();
+      const resultFilter = document.getElementById('tcFilterResult')?.value || 'ALL';
+
+      let filtered = appData.testCases.filter(tc => {
+        const matchesSearch = tc.title.toLowerCase().includes(search) || tc.module.toLowerCase().includes(search);
+        const matchesResult = resultFilter === 'ALL' || tc.result === resultFilter;
+        return matchesSearch && matchesResult;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="p-8 text-center text-[#94A3B8] bg-[#111827] rounded-2xl border border-[#1F2937]">No test cases found matching filters.</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(tc => `
+        <div class="bg-[#111827] border border-[#1F2937] p-5 rounded-2xl space-y-4 hover:border-[#2563EB] transition-all">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-[#1F2937] pb-3">
+            <div>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-[#0D1422] text-[#38BDF8] border border-[#1F2937]">${tc.module}</span>
+              <h3 class="font-bold text-white text-base mt-1">${tc.title}</h3>
+            </div>
+
+            <!-- Interactive Dropdowns for Test Priority & Result -->
+            <div class="flex items-center space-x-3">
+              <!-- Priority Dropdown -->
+              <div class="flex flex-col">
+                <label class="text-[9px] text-[#94A3B8] uppercase font-semibold mb-0.5">Priority</label>
+                <select onchange="updateTestCaseField('${tc.id}', 'priority', this.value)" class="text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-[#0D1422] border border-[#1F2937] text-white focus:outline-none">
+                  <option value="Critical" ${tc.priority === 'Critical' ? 'selected' : ''}>Critical</option>
+                  <option value="High" ${tc.priority === 'High' ? 'selected' : ''}>High</option>
+                  <option value="Medium" ${tc.priority === 'Medium' ? 'selected' : ''}>Medium</option>
+                  <option value="Low" ${tc.priority === 'Low' ? 'selected' : ''}>Low</option>
+                </select>
+              </div>
+
+              <!-- Test Result Dropdown -->
+              <div class="flex flex-col">
+                <label class="text-[9px] text-[#94A3B8] uppercase font-semibold mb-0.5">Test Result</label>
+                <select onchange="updateTestCaseField('${tc.id}', 'result', this.value)" class="text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-[#0D1422] border border-[#1F2937] text-white focus:outline-none">
+                  <option value="Not Run" ${tc.result === 'Not Run' ? 'selected' : ''}>Not Run</option>
+                  <option value="Passed" ${tc.result === 'Passed' ? 'selected' : ''}>Passed</option>
+                  <option value="Failed" ${tc.result === 'Failed' ? 'selected' : ''}>Failed</option>
+                  <option value="Blocked" ${tc.result === 'Blocked' ? 'selected' : ''}>Blocked</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Expected vs Actual Result Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="bg-[#0D1422] p-3 rounded-xl border border-[#1F2937]">
+              <span class="text-[10px] text-[#38BDF8] font-bold uppercase tracking-wider flex items-center mb-1">
+                <i class="fa-solid fa-check-circle mr-1.5"></i> Expected Result
+              </span>
+              <p class="text-xs text-[#F1F5F9] leading-relaxed">${tc.expected || 'N/A'}</p>
+            </div>
+
+            <div class="bg-[#0D1422] p-3 rounded-xl border border-[#1F2937]">
+              <span class="text-[10px] text-[#F59E0B] font-bold uppercase tracking-wider flex items-center mb-1">
+                <i class="fa-solid fa-clipboard-check mr-1.5"></i> Actual Result
+              </span>
+              <p class="text-xs text-[#F1F5F9] leading-relaxed">${tc.actual || 'N/A'}</p>
+            </div>
+          </div>
+
+          <!-- Footer & Actions -->
+          <div class="flex items-center justify-between text-xs text-[#94A3B8] pt-2 border-t border-[#1F2937]">
+            <span>Assigned Tester: <strong class="text-white">${tc.tester || 'Unassigned'}</strong></span>
+            <div class="flex items-center space-x-3">
+              <button onclick="viewTestCaseDetails('${tc.id}')" class="px-3 py-1 bg-[#0D1422] hover:bg-[#1F2937] text-white rounded-lg border border-[#1F2937] transition-all">View Details</button>
+              <button onclick="deleteTestCase('${tc.id}')" class="text-[#EF4444] hover:text-red-400 p-1"><i class="fa-solid fa-trash"></i></button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterTestCases() {
+      renderTestCases();
+    }
+
+    function updateTestCaseField(id, field, value) {
+      const tc = appData.testCases.find(t => t.id === id);
+      if (tc) {
+        tc[field] = value;
+        addActivity(`Updated Test Case ${tc.title} ${field} to ${value}`);
+        saveData();
+        showToast(`Test case ${field} updated to ${value}`, 'success');
+      }
+    }
+
+    function handleCreateTestCase(e) {
+      e.preventDefault();
+      const newTc = {
+        id: 'tc_' + Date.now(),
+        title: document.getElementById('tcTitle').value.trim(),
+        module: document.getElementById('tcModule').value.trim(),
+        priority: document.getElementById('tcPriority').value,
+        result: document.getElementById('tcResult').value,
+        preconditions: document.getElementById('tcPreconditions').value.trim(),
+        steps: document.getElementById('tcSteps').value.trim(),
+        expected: document.getElementById('tcExpected').value.trim(),
+        actual: document.getElementById('tcActual').value.trim(),
+        tester: document.getElementById('tcTester').value.trim() || currentUser.name,
+        date: new Date().toISOString().split('T')[0]
+      };
+
+      appData.testCases.unshift(newTc);
+      addActivity(`Created test case: ${newTc.title}`);
+      saveData();
+      renderTestCases();
+      closeModal('addTestCaseModal');
+      showToast('Test case created!', 'success');
+    }
+
+    function deleteTestCase(id) {
+      appData.testCases = appData.testCases.filter(t => t.id !== id);
+      saveData();
+      renderTestCases();
+      showToast('Test case deleted', 'info');
+    }
+
+    function viewTestCaseDetails(id) {
+      const tc = appData.testCases.find(t => t.id === id);
+      if (!tc) return;
+
+      document.getElementById('detailModalTitle').innerText = 'Test Case - ' + tc.title;
+      document.getElementById('detailModalBody').innerHTML = `
+        <div class="space-y-3">
+          <div><span class="text-[#94A3B8]">Module:</span> <strong class="text-white">${tc.module}</strong></div>
+          <div class="flex space-x-4">
+            <div><span class="text-[#94A3B8]">Priority:</span> <span class="font-bold text-[#38BDF8]">${tc.priority}</span></div>
+            <div><span class="text-[#94A3B8]">Result:</span> <span class="font-bold text-[#22C55E]">${tc.result}</span></div>
+          </div>
+          <div><span class="text-[#94A3B8]">Preconditions:</span><p class="mt-1 bg-[#0D1422] p-2 rounded border border-[#1F2937]">${tc.preconditions || 'None'}</p></div>
+          <div><span class="text-[#94A3B8]">Test Steps:</span><p class="mt-1 bg-[#0D1422] p-2 rounded border border-[#1F2937] font-mono text-[11px]">${tc.steps || 'N/A'}</p></div>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="bg-[#0D1422] p-2 rounded border border-[#1F2937]"><span class="text-[#38BDF8] font-bold block">Expected Result</span><p>${tc.expected || 'N/A'}</p></div>
+            <div class="bg-[#0D1422] p-2 rounded border border-[#1F2937]"><span class="text-[#F59E0B] font-bold block">Actual Result</span><p>${tc.actual || 'N/A'}</p></div>
+          </div>
+          <div class="text-[#94A3B8]">Assigned Tester: ${tc.tester}</div>
+        </div>
+      `;
+      openModal('detailViewModal');
+    }
+
+    function renderTeam() {
+      const qaHeads = appData.team.filter(m => m.role === 'QA Head');
+      const engineers = appData.team.filter(m => m.role === 'QA Tester' || m.role === 'Developer');
+      const clients = appData.team.filter(m => m.role === 'Client');
+
+      const renderCard = (m) => `
+        <div class="bg-[#111827] border border-[#1F2937] p-4 rounded-2xl flex items-center justify-between hover:border-[#2563EB] transition-all">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-600/20 text-[#38BDF8] font-bold border border-blue-500/30 flex items-center justify-center text-sm">
+              ${m.name.substring(0,2).toUpperCase()}
+            </div>
+            <div>
+              <h4 class="font-bold text-white text-sm">${m.name}</h4>
+              <p class="text-xs text-[#94A3B8]">${m.role} • <span class="text-[#38BDF8]">${m.department}</span></p>
+              <span class="text-[10px] text-[#22C55E]">${m.status} • ${m.tasks || 0} active tasks</span>
+            </div>
+          </div>
+          <button onclick="deleteMember('${m.id}')" class="text-[#EF4444] hover:text-red-400 p-1"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      `;
+
+      document.getElementById('teamQaHeadList').innerHTML = qaHeads.length ? qaHeads.map(renderCard).join('') : `<p class="text-xs text-[#94A3B8]">No QA Heads assigned.</p>`;
+      document.getElementById('teamEngineersList').innerHTML = engineers.length ? engineers.map(renderCard).join('') : `<p class="text-xs text-[#94A3B8]">No Testers/Devs assigned.</p>`;
+      document.getElementById('teamClientList').innerHTML = clients.length ? clients.map(renderCard).join('') : `<p class="text-xs text-[#94A3B8]">No Clients registered.</p>`;
+    }
+
+    function handleCreateMember(e) {
+      e.preventDefault();
+      const newMember = {
+        id: 'tm_' + Date.now(),
+        name: document.getElementById('teamName').value.trim(),
+        role: document.getElementById('teamRole').value,
+        department: document.getElementById('teamDept').value.trim() || 'Software Quality',
+        status: document.getElementById('teamStatus').value,
+        tasks: parseInt(document.getElementById('teamTasks').value) || 0,
+        projects: document.getElementById('teamProjects').value.trim() || 'General QA'
+      };
+
+      appData.team.push(newMember);
+      saveData();
+      renderTeam();
+      closeModal('addTeamModal');
+      showToast('Team member added!', 'success');
+    }
+
+    function deleteMember(id) {
+      appData.team = appData.team.filter(m => m.id !== id);
+      saveData();
+      renderTeam();
+      showToast('Member removed', 'info');
+    }
+
+    // REPORTS SECTION
+    function renderReports() {
+      const testCases = appData.testCases || [];
+      const bugs = appData.bugs || [];
+
+      const totalExecuted = testCases.filter(t => t.result !== 'Not Run').length;
+      const passed = testCases.filter(t => t.result === 'Passed').length;
+      const passRate = totalExecuted > 0 ? Math.round((passed / totalExecuted) * 100) : 0;
+
+      const totalBugs = bugs.length;
+      const resolvedBugs = bugs.filter(b => b.status === 'Resolved' || b.status === 'Closed').length;
+      const resRate = totalBugs > 0 ? Math.round((resolvedBugs / totalBugs) * 100) : 0;
+
+      const criticalBugs = bugs.filter(b => b.severity === 'Critical').length;
+      const criticalRatio = totalBugs > 0 ? Math.round((criticalBugs / totalBugs) * 100) : 0;
+
+      document.getElementById('reportPassRate').innerText = passRate + '%';
+      document.getElementById('reportResolutionRate').innerText = resRate + '%';
+      document.getElementById('reportCriticalRatio').innerText = criticalRatio + '%';
+
+      // Saved Reports List
+      const reportsList = document.getElementById('reportsList');
+      reportsList.innerHTML = (appData.reports || []).map(r => {
+        const proj = appData.projects.find(p => p.id === r.projectId);
+        return `
+          <div class="bg-[#0D1422] p-4 rounded-xl border border-[#1F2937] flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="text-xs font-bold text-white">${r.title}</span>
+                <span class="text-[10px] text-[#38BDF8] bg-[#111827] px-2 py-0.5 rounded border border-[#1F2937]">${proj ? proj.name : 'General'}</span>
+              </div>
+              <p class="text-xs text-[#94A3B8] mt-1">${r.notes}</p>
+            </div>
+            <div class="flex items-center space-x-3">
+              <span class="text-[10px] text-[#94A3B8] font-mono">${r.date || 'Recent'}</span>
+              <button onclick="deleteReport('${r.id}')" class="text-[#EF4444] hover:text-red-400 p-1"><i class="fa-solid fa-trash"></i></button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function handleCreateReport(e) {
+      e.preventDefault();
+      const newReport = {
+        id: 'r_' + Date.now(),
+        title: document.getElementById('reportTitle').value.trim(),
+        projectId: document.getElementById('reportProjectSelect').value,
+        notes: document.getElementById('reportNotes').value.trim(),
+        date: new Date().toISOString().split('T')[0]
+      };
+
+      appData.reports.unshift(newReport);
+      saveData();
+      renderReports();
+      closeModal('addReportModal');
+      showToast('Bug Report Entry created!', 'success');
+    }
+
+    function deleteReport(id) {
+      appData.reports = appData.reports.filter(r => r.id !== id);
+      saveData();
+      renderReports();
+      showToast('Report entry removed', 'info');
+    }
+
+    function populateProjectDropdowns() {
+      const bugSelect = document.getElementById('bugProjectSelect');
+      const reportSelect = document.getElementById('reportProjectSelect');
+
+      const options = appData.projects.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+      if (bugSelect) bugSelect.innerHTML = options;
+      if (reportSelect) reportSelect.innerHTML = options;
+    }
+
+    function openModal(modalId) {
+      document.getElementById(modalId).classList.remove('hidden');
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.add('hidden');
+    }
+
+    function quickAddModal() {
+      openModal('addBugModal');
+    }
+  </script>
+</body>
+</html>
